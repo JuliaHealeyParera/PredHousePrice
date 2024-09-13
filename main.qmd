@@ -1,1 +1,12 @@
+```{r load, echo = FALSE}
 
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+sub <- read_csv("data/sample_submission.csv")
+test <- read_csv("data/test.csv")
+train <- read_csv("data/train.csv")
+```
