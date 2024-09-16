@@ -59,3 +59,20 @@ best_model <- glmnet(initial_predictors, train$SalePrice, alpha = 1, lambda = la
 coef(best_model)
 
 ```
+
+```{r}
+
+# First step: using .*. for all interactions
+f <- as.formula(y ~ .*.)
+y <- train$SalePrice
+train <- train |>
+  select(-c('OverallQual', 'OverallCond' ,'ExterQual' , 'BsmtFinType1', 'BsmtFinType2', 'GarageQual', 'WoodDeckSF', '3SsnPorch', 'ScreenPorch', 'FireplaceQu', 'LowQualFinSF', 'GarageCars', 'SalePrice'))
+
+# Second step: using model.matrix to take advantage of f
+x <- model.matrix(f, train)[, -1]
+new_model <- cv.glmnet(x, y)
+lambda_min <- new_model$lambda.min
+plot(new_model)
+b_model <- glmnet(x, y, alpha = 1, lambda = lambda_min)
+coef(b_model)
+```
