@@ -1,12 +1,61 @@
 ```{r load, echo = FALSE}
-
+#loading libraries
 library(readxl)
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(glmnet)
 
+#loading datasets
 sub <- read_csv("data/sample_submission.csv")
 test <- read_csv("data/test.csv")
 train <- read_csv("data/train.csv")
+```
+
+```{r}
+
+#Cleaning NAs
+train <- train |> 
+  mutate(YrSold = as.factor(YrSold),
+         YearBuilt = as.factor(YearBuilt),
+         YearRemodAdd = as.factor(YearRemodAdd),
+         MoSold = as.factor(MoSold),
+         GarageYrBlt = as.factor(GarageYrBlt),
+         LotFrontage = ifelse(is.na(LotFrontage), 0, LotFrontage),
+         Alley = ifelse(is.na(Alley), "NA", Alley),
+         MasVnrType = ifelse(is.na(MasVnrType), "NA", MasVnrType),
+         MasVnrArea = ifelse(is.na(MasVnrArea), 0, MasVnrArea),
+         BsmtQual = ifelse(is.na(BsmtQual), "NA", BsmtQual),
+         BsmtCond = ifelse(is.na(BsmtCond), "NA", BsmtCond),
+         BsmtExposure = ifelse(is.na(BsmtExposure), "NA", BsmtExposure),
+         GarageType = ifelse(is.na(GarageType), "NA", GarageType),
+         GarageYrBlt = ifelse(is.na(GarageYrBlt), YearBuilt, GarageYrBlt),
+         GarageFinish = ifelse(is.na(GarageFinish), "NA", GarageFinish),
+         GarageCond = ifelse(is.na(GarageCond), "NA", GarageCond),
+         PoolQC = ifelse(is.na(PoolQC), "NA", PoolQC),
+         Fence = ifelse(is.na(Fence), "NA", Fence),
+         MiscFeature = ifelse(is.na(MiscFeature), "NA", MiscFeature)) |>
+  na.omit()
+
+#Eliminating redundant or problematic predictors
+elim_indicators <- c('OverallQual', 'OverallCond' ,'ExterQual' , 'BsmtFinType1', 'BsmtFinType2', 'GarageQual', 'WoodDeckSF', '3SsnPorch', 'ScreenPorch', 'FireplaceQu', 'LowQualFinSF', 'GarageCars', 'SalePrice')
+
+#All indicators to be used
+inc_indicators <- setdiff(colnames(train), elim_indicators)
+
+#Indicators into matrix form
+initial_predictors <- data.matrix(train[, inc_indicators])
+
+#Finding optimal lambda
+initial_model <- cv.glmnet(initial_predictors, train$SalePrice, alpha = 1)
+lambda_val <- initial_model$lambda.min
+
+#Plot of MSE against lambda values
+plot(initial_model)
+
+#Calculating best model -- need to reevaluate included predictors 
+best_model <- glmnet(initial_predictors, train$SalePrice, alpha = 1, lambda = lambda_val)
+coef(best_model)
+
 ```
